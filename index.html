@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Diary">
@@ -20,6 +20,10 @@
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;max-width:560px;margin:0 auto;min-height:100vh}
 button,input,textarea{font:inherit;color:inherit}
+html{-webkit-text-size-adjust:100%}
+input,textarea{font-size:16px}
+input[type=date],input[type=datetime-local]{display:block;width:100%;min-width:0;max-width:100%;-webkit-appearance:none;appearance:none;min-height:40px}
+body{overflow-x:clip;touch-action:manipulation}
 button{cursor:pointer;border:0;background:none}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px)}
 .top h1{font-size:16px;margin:0;color:var(--acc);letter-spacing:2px}
@@ -49,10 +53,13 @@ button{cursor:pointer;border:0;background:none}
 .cm{background:var(--soft);border-radius:8px;padding:6px 10px;margin-top:8px;font-size:13px}
 .cm div{margin:2px 0}.cm i{font-style:normal;color:var(--acc);font-weight:600}
 .cin{display:flex;gap:6px;margin-top:8px}
-.cin input{flex:1;min-width:0;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:5px 12px;font-size:13px}
+.cin input{flex:1;min-width:0;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:7px 12px;font-size:16px}
 .cin button{color:var(--acc);font-size:13px}
 .empty{text-align:center;color:var(--sub);padding:40px 20px;background:var(--card)}
 .tg{background:var(--soft);color:var(--acc);border-radius:10px;padding:0 8px;margin-right:6px}
+.gs{background:var(--soft);color:var(--sub);border-radius:8px;padding:6px 10px;font-size:13px;margin-bottom:6px}.gs button{color:var(--acc);margin-left:8px}
+#m2{position:fixed;inset:0;background:rgba(30,20,50,.45);display:none;align-items:flex-end;justify-content:center;z-index:25}
+#m2.on{display:flex}
 .tabs{display:flex;gap:6px;padding:0 12px 10px;overflow-x:auto}
 .tabs button{padding:5px 14px;border-radius:16px;background:var(--soft);color:var(--sub);font-size:13px;white-space:nowrap}
 .tabs button.on{background:var(--acc);color:#fff}
@@ -73,7 +80,7 @@ button{cursor:pointer;border:0;background:none}
 .sheet{background:var(--card);width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
 .sheet h3{margin:0 0 12px;color:var(--acc)}
 .sheet label{display:block;font-size:12px;color:var(--sub);margin:12px 0 4px}
-.sheet input[type=text],.sheet input[type=date],.sheet input[type=datetime-local],.sheet textarea{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:8px 10px}
+.sheet input[type=text],.sheet input[type=password],.sheet input[type=date],.sheet input[type=datetime-local],.sheet textarea{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:8px 10px}
 .sheet textarea{min-height:110px;resize:vertical}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .chip{padding:3px 11px;border-radius:14px;background:var(--soft);font-size:13px}
@@ -91,6 +98,7 @@ button{cursor:pointer;border:0;background:none}
 <div class="tabs" id="tb"></div>
 <div id="feed"></div>
 <div id="m"><div class="sheet" id="sh"></div></div>
+<div id="m2"><div class="sheet" id="sh2"></div></div>
 <div id="t"></div>
 <input type="file" id="fi" accept="image/*" hidden>
 <input type="file" id="fj" accept=".json" hidden>
@@ -99,9 +107,10 @@ var K='iris_diary_v1';
 var GR={g1:'linear-gradient(135deg,#d9c8f5,#a98bdc)',g2:'linear-gradient(135deg,#efe3ff,#b7a0e8)',g3:'linear-gradient(135deg,#f3d9ee,#c5a8e6)',g4:'linear-gradient(135deg,#cfd8f7,#a89be0)',g5:'linear-gradient(135deg,#8d77c4,#4b3a7a)'};
 var ACC=['#9b7fd1','#b08be0','#7f8fd8','#c27fbf','#7a5ec2'];
 var MOODS=['🪻 想你','☁️ 发呆','🌙 晚安','🍓 开心','🌧️ 有点丧','✨ 小确幸','🍵 日常'];
-function def(){return{cur:'me',tab:'feed',tags:[],notes:[],wishes:[],days:[],api:{url:'',key:'',model:'',size:'1024x1024'},gprompt:'',acc:ACC[0],anniv:'',profiles:{me:{name:'我',bio:'今天也在想你。',avatar:'',cover:'g1',emoji:'🌙'},ta:{name:'Ta',bio:'浅紫色的鸢尾花 🪻',avatar:'',cover:'g2',emoji:'🪻'}},posts:[]}}
+function def(){return{cur:'me',tab:'feed',tags:[],hide:true,notes:[],wishes:[],days:[],api:{url:'',key:'',model:'',size:'1024x1024'},gprompt:'',acc:ACC[0],anniv:'',profiles:{me:{name:'我',bio:'今天也在想你。',avatar:'',cover:'g1',emoji:'🌙'},ta:{name:'Ta',bio:'浅紫色的鸢尾花 🪻',avatar:'',cover:'g2',emoji:'🪻'}},posts:[]}}
 function load(){try{var r=localStorage.getItem(K);if(r)return Object.assign(def(),JSON.parse(r))}catch(e){}return def()}
 var S=load(),D=null,pend=null;
+S.posts.forEach(function(p){if(p.gen&&p.gen.s=='p')p.gen={s:'f',p:p.gen.p,e:'生成被中断了'}});
 function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){toast('存储空间满了，请导出备份并删掉一些图片')}}
 function $(s){return document.querySelector(s)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -117,26 +126,26 @@ function render(){
  $('#sw').innerHTML=['me','ta'].map(function(w){return '<button data-a="sw" data-w="'+w+'" class="'+(S.cur==w?'on':'')+'">'+esc(S.profiles[w].name)+'</button>'}).join('');
  var dy=S.anniv?Math.floor((Date.now()-new Date(S.anniv))/864e5)+1:0;
  $('#hd').innerHTML='<div class="cover" style="background-image:'+cv(p.cover)+'"><span class="nm">'+esc(p.name)+'</span>'+av(S.cur)+'</div><div class="info"><div><p class="bio">'+esc(p.bio)+'</p>'+(dy>0?'<span class="days">相遇的第 '+dy+' 天</span>':'')+'</div></div><div class="btns"><button class="btn" data-a="edit">装饰主页</button><button class="btn p" data-a="new">写一条</button></div>';
-if(S.tab=='gen'&&S.cur!='ta')S.tab='feed';tabs();$('#feed').innerHTML=view();
+if(S.tab=='gen')S.tab='feed';tabs();$('#feed').innerHTML=view();
 }
 function post(o){
  var im=(o.imgs||[]).map(function(s){return '<div style="background-image:url(\''+s+'\')"></div>'}).join('');
  var ln=['me','ta'].filter(function(w){return o.likes&&o.likes[w]}).map(function(w){return esc(S.profiles[w].name)});
  var cm=(o.comments||[]).map(function(c){return '<div><i>'+esc(S.profiles[c.who].name)+'：</i>'+esc(c.text)+'</div>'}).join('');
- return '<div class="post">'+av(o.who)+'<div class="bd"><b>'+esc(S.profiles[o.who].name)+'</b><p>'+esc(o.text)+'</p>'+(im?'<div class="imgs'+(o.imgs.length==1?' one':'')+'">'+im+'</div>':'')+'<div class="meta"><span>'+(o.mood?'<span class="tg">'+esc(o.mood)+'</span>':'')+fmt(o.ts)+'</span><span><button data-a="like" data-id="'+o.id+'">'+(o.likes&&o.likes[S.cur]?'🪻 已赞':'🪻 赞')+'</button>'+(o.who==S.cur?'<button data-a="del" data-id="'+o.id+'">删除</button>':'')+'</span></div>'+((ln.length||cm)?'<div class="cm">'+(ln.length?'<div>🪻 '+ln.join('、')+'</div>':'')+cm+'</div>':'')+'<div class="cin"><input id="c'+o.id+'" placeholder="以「'+esc(S.profiles[S.cur].name)+'」的身份留言…"><button data-a="cmt" data-id="'+o.id+'">留言</button></div></div></div>';
+ return '<div class="post">'+av(o.who)+'<div class="bd"><b>'+esc(S.profiles[o.who].name)+'</b><p>'+esc(o.text)+'</p>'+(im?'<div class="imgs'+(o.imgs.length==1?' one':'')+'">'+im+'</div>':'')+gst(o)+'<div class="meta"><span>'+(o.mood?'<span class="tg">'+esc(o.mood)+'</span>':'')+fmt(o.ts)+'</span><span><button data-a="like" data-id="'+o.id+'">'+(o.likes&&o.likes[S.cur]?'🪻 已赞':'🪻 赞')+'</button>'+(o.who==S.cur?'<button data-a="del" data-id="'+o.id+'">删除</button>':'')+'</span></div>'+((ln.length||cm)?'<div class="cm">'+(ln.length?'<div>🪻 '+ln.join('、')+'</div>':'')+cm+'</div>':'')+'<div class="cin"><input id="c'+o.id+'" placeholder="以「'+esc(S.profiles[S.cur].name)+'」的身份留言…"><button data-a="cmt" data-id="'+o.id+'">留言</button></div></div></div>';
 }
 function open(h){$('#sh').innerHTML=h;$('#m').classList.add('on')}
 function close(){$('#m').classList.remove('on');D=null;pend=null}
 function composer(){
  var n=new Date(),z=new Date(n-n.getTimezoneOffset()*6e4).toISOString().slice(0,16);
  pend={imgs:[]};
- open('<h3>以「'+esc(S.profiles[S.cur].name)+'」的身份记录</h3><textarea id="tx" placeholder="碎碎念、今天发生的事、一段回忆……"></textarea><label>心情标签（想写什么都行，也可以点下面的）</label><input type="text" id="mi" maxlength="12" placeholder="比如：想你、今天好累、小确幸"><div class="row" id="md" style="margin-top:8px">'+S.tags.concat(MOODS).map(function(m){return '<button class="chip" data-a="mood" data-m="'+esc(m)+'">'+esc(m)+'</button>'}).join('')+'</div><label>图片（最多 6 张）</label><div class="row" id="pv"></div><label>时间（写回忆可改成过去的日子）</label><input type="datetime-local" id="dt" value="'+z+'"><div class="btns" style="padding:16px 0 0"><button class="btn" data-a="close">取消</button><button class="btn p" data-a="pub">发布</button></div>');
+ open('<h3>以「'+esc(S.profiles[S.cur].name)+'」的身份记录</h3><textarea id="tx" placeholder="碎碎念、今天发生的事、一段回忆……"></textarea><label>心情标签（想写什么都行，也可以点下面的）</label><input type="text" id="mi" maxlength="12" placeholder="比如：想你、今天好累、小确幸"><div class="row" id="md" style="margin-top:8px">'+S.tags.concat(MOODS).map(function(m){return '<button class="chip" data-a="mood" data-m="'+esc(m)+'">'+esc(m)+'</button>'}).join('')+'</div><label>图片（最多 6 张）</label><div class="row" id="pv"></div>'+gui()+'<label>时间（写回忆可改成过去的日子）</label><input type="datetime-local" id="dt" value="'+z+'"><div class="btns" style="padding:16px 0 0"><button class="btn" data-a="close">取消</button><button class="btn p" data-a="pub">发布</button></div>');
  pvr();
 }
 function pvr(){$('#pv').innerHTML=pend.imgs.map(function(s,i){return '<div class="pv" style="background-image:url(\''+s+'\')" data-a="rmimg" data-i="'+i+'"></div>'}).join('')+(pend.imgs.length<6?'<button class="pv" data-a="addimg">＋</button>':'')}
 function editor(){
  var p=S.profiles[S.cur];D={name:p.name,bio:p.bio,avatar:p.avatar,cover:p.cover,anniv:S.anniv,acc:S.acc};
- open('<h3>装饰「'+esc(p.name)+'」的主页</h3><label>昵称</label><input type="text" id="en" maxlength="16" value="'+esc(p.name)+'"><label>个性签名</label><input type="text" id="eb" maxlength="60" value="'+esc(p.bio)+'"><label>头像</label><div class="row"><div class="pv" id="eav"></div><button class="fl" data-a="pav">上传头像</button><button class="fl" data-a="rav">用表情代替</button></div><label>主页背景</label><div class="row" id="ecv"></div><div class="row" style="margin-top:8px"><button class="fl" data-a="pcv">上传背景图</button></div><label>相遇纪念日</label><input type="date" id="ea" value="'+esc(S.anniv)+'"><label>主题色</label><div class="row">'+ACC.map(function(c){return '<button class="th" style="background:'+c+'" data-a="acc" data-c="'+c+'"></button>'}).join('')+'</div><label>数据备份</label><div class="row"><button class="fl" data-a="exp">导出备份</button><button class="fl" data-a="imp">导入备份</button></div><div class="btns" style="padding:16px 0 0"><button class="btn" data-a="close">取消</button><button class="btn p" data-a="saveP">保存</button></div>');
+ open('<h3>装饰「'+esc(p.name)+'」的主页</h3><label>昵称</label><input type="text" id="en" maxlength="16" value="'+esc(p.name)+'"><label>个性签名</label><input type="text" id="eb" maxlength="60" value="'+esc(p.bio)+'"><label>头像</label><div class="row"><div class="pv" id="eav"></div><button class="fl" data-a="pav">上传头像</button><button class="fl" data-a="rav">用表情代替</button></div><label>主页背景</label><div class="row" id="ecv"></div><div class="row" style="margin-top:8px"><button class="fl" data-a="pcv">上传背景图</button></div><label>相遇纪念日</label><input type="date" id="ea" value="'+esc(S.anniv)+'"><label>主题色</label><div class="row">'+ACC.map(function(c){return '<button class="th" style="background:'+c+'" data-a="acc" data-c="'+c+'"></button>'}).join('')+'</div><label>生图设置</label><div class="row"><button class="fl" data-a="gset">打开生图设置</button></div><label>数据备份</label><div class="row"><button class="fl" data-a="exp">导出备份</button><button class="fl" data-a="imp">导入备份</button></div><div class="btns" style="padding:16px 0 0"><button class="btn" data-a="close">取消</button><button class="btn p" data-a="saveP">保存</button></div>');
  evr();
 }
 function evr(){
@@ -154,9 +163,9 @@ document.addEventListener('click',function(e){
  else if(a=='mood'){$('#mi').value=t.dataset.m}
  else if(a=='addimg')pick(900,function(s){pend.imgs.push(s);pvr()});
  else if(a=='rmimg'){pend.imgs.splice(+t.dataset.i,1);pvr()}
- else if(a=='pub'){var tx=$('#tx').value.trim();if(!tx&&!pend.imgs.length){toast('写点什么吧');return}
+ else if(a=='pub'){var tx=$('#tx').value.trim();var gpv=$('#gpm')&&pend.gen?$('#gpm').value.trim():'';if(!tx&&!pend.imgs.length&&!gpv){toast('写点什么吧');return}if(gpv&&!S.api.url){toast('先点「生图设置」填好 API 地址');return}
   var ts=new Date($('#dt').value).getTime()||Date.now();
-  var mv=$('#mi').value.trim().slice(0,12);if(mv&&MOODS.indexOf(mv)<0&&S.tags.indexOf(mv)<0){S.tags.unshift(mv);S.tags=S.tags.slice(0,10)}S.posts.push({id:Date.now(),who:S.cur,text:tx,imgs:pend.imgs,mood:mv,ts:ts,likes:{},comments:[]});save();close();render()}
+  var mv=$('#mi').value.trim().slice(0,12);if(mv&&MOODS.indexOf(mv)<0&&S.tags.indexOf(mv)<0){S.tags.unshift(mv);S.tags=S.tags.slice(0,10)}var nid=Date.now();S.posts.push({id:nid,who:S.cur,text:tx,imgs:pend.imgs,mood:mv,ts:ts,likes:{},comments:[],gen:gpv?{s:'p',p:gpv}:null});save();close();render();if(gpv)runGen(nid)}
  else if(a=='like'){p=S.posts.filter(function(x){return x.id==id})[0];p.likes=p.likes||{};p.likes[S.cur]=!p.likes[S.cur];save();render()}
  else if(a=='cmt'){var v=$('#c'+id).value.trim();if(!v)return;p=S.posts.filter(function(x){return x.id==id})[0];p.comments=p.comments||[];p.comments.push({who:S.cur,text:v});save();render()}
  else if(a=='del'){if(confirm('确定删除这条记录吗？')){S.posts=S.posts.filter(function(x){return x.id!=id});save();render()}}
@@ -170,42 +179,48 @@ document.addEventListener('click',function(e){
  else if(a=='imp'){var f=$('#fj');f.value='';f.onchange=function(){var r=new FileReader();r.onload=function(){try{S=Object.assign(def(),JSON.parse(r.result));save();close();render();toast('导入成功')}catch(x){toast('文件格式不对')}};r.readAsText(f.files[0])};f.click()}
 });
 var RN=Math.floor(Math.random()*1e6),G={img:''};
-var TABS=[['feed','动态'],['note','小纸条'],['wish','心愿'],['day','纪念日'],['gen','生图']];
+var TABS=[['feed','动态'],['note','小纸条'],['wish','心愿'],['day','纪念日']];
 function tabs(){$('#tb').innerHTML=TABS.filter(function(t){return t[0]!='gen'||S.cur=='ta'}).map(function(t){return '<button data-a="tab" data-t="'+t[0]+'" class="'+(S.tab==t[0]?'on':'')+'">'+t[1]+'</button>'}).join('')}
 function nm(w){return esc(S.profiles[w].name)}
 function dd(s){var a=new Date(s+'T00:00'),b=new Date();b.setHours(0,0,0,0);return Math.round((a-b)/864e5)}
-function view(){var t=S.tab;return t=='note'?vNote():t=='wish'?vWish():t=='day'?vDay():t=='gen'?vGen():vFeed()}
+function view(){var t=S.tab;return t=='note'?vNote():t=='wish'?vWish():t=='day'?vDay():vFeed()}
 function vFeed(){var ps=S.posts.slice().sort(function(a,b){return b.ts-a.ts});return ps.length?ps.map(post).join(''):'<div class="empty">🪻<br>还没有记录，点「写一条」开始吧</div>'}
-function vNote(){var n=S.notes,r=n.length?n[RN%n.length]:null;
- return '<div class="pane"><div class="big">'+(r?'「'+esc(r.text)+'」<small>—— '+nm(r.who)+'</small>':'还没有小纸条，写一张吧')+'</div><button class="btn" data-a="roll" style="width:100%">再抽一张</button><label>以「'+nm(S.cur)+'」的身份写一张（想对Ta说的话 / Ta会对你说的话）</label><div class="cin"><input id="ni" placeholder="写下来，放进小纸条盒"><button data-a="addn">放进去</button></div>'+n.map(function(x,i){return '<div class="li"><span>'+esc(x.text)+' <small>—'+nm(x.who)+'</small></span><button data-a="deln" data-i="'+i+'">✕</button></div>'}).join('')+'</div>'}
+var ND=-1;
+function vNote(){var n=S.notes,r=ND>=0&&n[ND]?n[ND]:null;
+ return '<div class="pane"><div class="big">'+(r?'「'+esc(r.text)+'」<small>—— '+nm(r.who)+'</small>':(n.length?'盒子里有 '+n.length+' 张小纸条<small>点下面的按钮，抽一张看看</small>':'盒子是空的，先写一张吧'))+'</div><div class="row"><button class="btn p" data-a="roll" style="flex:1">'+(r?'再抽一张':'抽一张')+'</button>'+(r?'<button class="btn" data-a="deln" data-i="'+ND+'" style="flex:1">撕掉这张</button>':'')+'</div><label>以「'+nm(S.cur)+'」的身份写一张（想对Ta说的话 / Ta会对你说的话）</label><div class="cin"><input id="ni" placeholder="写下来，放进小纸条盒"><button data-a="addn">放进去</button></div>'+(S.hide?'<p class="sub" style="margin-top:12px">写好的纸条会被藏起来，只有抽到的时候才能看见。</p>':n.map(function(x,i){return '<div class="li"><span>'+esc(x.text)+' <small>—'+nm(x.who)+'</small></span><button data-a="deln" data-i="'+i+'">✕</button></div>'}).join(''))+'<div class="row" style="margin-top:12px"><button class="fl" data-a="thide">'+(S.hide?'显示所有纸条':'把纸条藏起来')+'</button></div></div>'}
 function vWish(){return '<div class="pane"><label>以「'+nm(S.cur)+'」的身份添加想一起做的事（点一下可勾选完成）</label><div class="cin"><input id="wi" placeholder="比如：一起去看一次海"><button data-a="addw">添加</button></div>'+S.wishes.map(function(x,i){return '<div class="li'+(x.done?' d':'')+'"><span data-a="tw" data-i="'+i+'" style="flex:1">'+(x.done?'🪻 ':'○ ')+esc(x.text)+' <small>—'+nm(x.who)+'</small></span><button data-a="delw" data-i="'+i+'">✕</button></div>'}).join('')+'</div>'}
-function dl(n,d,x){var k=dd(d);return '<div class="li"><span>'+esc(n)+' <small>'+d+'</small></span><span><b style="color:var(--acc)">'+(k>0?'还有 '+k+' 天':k==0?'就是今天 🪻':'已经 '+(-k)+' 天')+'</b>'+(x||'')+'</span></div>'}
-function vDay(){return '<div class="pane"><label>添加纪念日 / 倒数日</label><input type="text" id="dn" placeholder="名字，比如：第一次见面"><input type="date" id="dv" style="margin-top:6px"><button class="btn p" data-a="addd" style="width:100%;margin-top:8px">添加</button><div style="margin-top:8px">'+(S.anniv?dl('相遇',S.anniv):'')+S.days.map(function(x,i){return dl(x.name,x.date,'<button data-a="deld" data-i="'+i+'" style="margin-left:8px">✕</button>')}).join('')+'</div></div>'}
-function gi(k,l,ph,ty){return '<label>'+l+'</label><input type="'+(ty||'text')+'" data-g="'+k+'" placeholder="'+ph+'" value="'+esc(S.api[k]||'')+'">'}
-function gres(){return G.img?'<img class="gi" src="'+esc(G.img)+'"><div class="row" style="margin-top:8px"><button class="fl" data-a="gpost">发到动态</button><button class="fl" data-a="gav">设为头像</button><button class="fl" data-a="gcv">设为背景</button></div>':''}
-function vGen(){return '<div class="pane"><p class="sub">填你自己的生图接口（OpenAI 格式）。地址和密钥只保存在这个浏览器里。</p>'+gi('url','API 地址','https://你的接口/v1/images/generations')+gi('key','API Key（可留空）','sk-...','password')+gi('model','模型名（可留空）','比如 dall-e-3')+gi('size','尺寸','1024x1024')+'<label>提示词</label><textarea id="gp" placeholder="描述你想生成的画面…">'+esc(S.gprompt||'')+'</textarea><div class="row" style="margin-top:6px">'+['浅紫色鸢尾花','水彩插画','柔和月光','情侣剪影','梦幻氛围','手机壁纸'].map(function(q){return '<button class="chip" data-a="gq" data-q="'+q+'">'+q+'</button>'}).join('')+'</div><button class="btn p" data-a="go" style="width:100%;margin-top:12px">生成</button><div id="gr">'+gres()+'</div></div>'}
+function nx(d){var a=d.split('-'),y=new Date().getFullYear(),b=new Date();b.setHours(0,0,0,0);var t=new Date(y,+a[1]-1,+a[2]);if(t<b)t=new Date(y+1,+a[1]-1,+a[2]);return{k:Math.round((t-b)/864e5),n:t.getFullYear()-(+a[0])}}
+function dl(n,d,x,yr){var k,sm=d;if(yr){var r=nx(d);k=r.k;sm='每年 '+(+d.slice(5,7))+'月'+(+d.slice(8,10))+'日'+(r.n>0?' · 将满 '+r.n+' 年':'')}else k=dd(d);return '<div class="li"><span>'+esc(n)+' <small>'+sm+'</small></span><span><b style="color:var(--acc)">'+(k>0?'还有 '+k+' 天':k==0?'就是今天 🪻':'已经 '+(-k)+' 天')+'</b>'+(x||'')+'</span></div>'}
+function vDay(){return '<div class="pane"><label>添加纪念日 / 倒数日</label><input type="text" id="dn" placeholder="名字，比如：第一次见面"><input type="date" id="dv" style="margin-top:6px"><label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink)"><input type="checkbox" id="dy"> 每年重复（比如生日、周年）</label><button class="btn p" data-a="addd" style="width:100%;margin-top:8px">添加</button><div style="margin-top:8px">'+(S.anniv?dl('相遇',S.anniv):'')+S.days.map(function(x,i){return dl(x.name,x.date,'<button data-a="deld" data-i="'+i+'" style="margin-left:8px">✕</button>',x.yr)}).join('')+'</div></div>'}
 function toData(src,max,cb){var im=new Image();im.crossOrigin='anonymous';im.onload=function(){try{var k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.8))}catch(e){cb(src)}};im.onerror=function(){cb(src);toast('图片链接无法转存，之后可能失效')};im.src=src}
-function gen(){var a=S.api,p=S.gprompt;if(!a.url||!p){toast('先填 API 地址和提示词');return}
- $('#gr').innerHTML='<p class="sub" style="margin-top:12px">生成中，请稍等…</p>';
+function gp_(id){return S.posts.filter(function(x){return x.id==id})[0]}
+function gf(k,l,ph,ty){return '<label>'+l+'</label><input type="'+(ty||'text')+'" data-g="'+k+'" placeholder="'+ph+'" value="'+esc(S.api[k]||'')+'">'}
+function gset(){$('#sh2').innerHTML='<h3>生图设置</h3><p class="sub">填你自己的生图接口（OpenAI 格式），只保存在这台设备里。</p>'+gf('url','API 地址（完整链接，需 https）','https://你的接口/v1/images/generations')+gf('key','API Key（可留空）','sk-...','password')+gf('model','模型名（可留空）','比如 dall-e-3')+gf('size','图片尺寸','1024x1024')+'<div class="btns" style="padding:16px 0 0"><button class="btn p" data-a="gclose">完成</button></div>';$('#m2').classList.add('on')}
+function gui(){if(S.cur!='ta')return '';return '<label>AI 配图（可选）</label><div class="row"><button class="chip" id="gt" data-a="gtog">🎨 给这条配一张 AI 图</button><button class="fl" data-a="gset">⚙ 生图设置</button></div><div id="gb" style="display:none;margin-top:8px"><textarea id="gpm" placeholder="写下生图提示词，发布后会在后台生成，图片自动出现在这条动态里" style="min-height:70px"></textarea><div class="row" style="margin-top:6px">'+['浅紫色鸢尾花','水彩插画','柔和月光','情侣剪影','梦幻氛围'].map(function(q){return '<button class="chip" data-a="gq" data-q="'+q+'">'+q+'</button>'}).join('')+'</div></div>'}
+function gst(o){return o.gen?'<div class="gs">'+(o.gen.s=='p'?'🎨 配图生成中，稍等一会儿…':'⚠️ 配图没生成出来：'+esc(o.gen.e||'未知原因')+'<button data-a="gretry" data-id="'+o.id+'">重试</button><button data-a="gdrop" data-id="'+o.id+'">不要了</button>')+'</div>':''}
+function runGen(id){var o=gp_(id);if(!o||!o.gen)return;var a=S.api,pr=o.gen.p;o.gen={s:'p',p:pr};save();render();
  var h={'Content-Type':'application/json'};if(a.key)h.Authorization='Bearer '+a.key;
- var b={prompt:p,n:1,size:a.size||'1024x1024'};if(a.model)b.model=a.model;
- fetch(a.url,{method:'POST',headers:h,body:JSON.stringify(b)}).then(function(x){return x.json()}).then(function(j){var d=j.data&&j.data[0];if(!d)throw new Error((j.error&&(j.error.message||j.error))||'返回格式不对');G.img=d.b64_json?'data:image/png;base64,'+d.b64_json:d.url;var r=$('#gr');if(r)r.innerHTML=gres()}).catch(function(e){var r=$('#gr');if(r)r.innerHTML='<p class="sub" style="margin-top:12px">失败：'+esc(e.message)+'（请检查地址、密钥，或接口是否允许跨域）</p>'})}
+ var b={prompt:pr,n:1,size:a.size||'1024x1024'};if(a.model)b.model=a.model;
+ function fail(e){var p=gp_(id);if(!p)return;var m=e&&e.message||'';if(m=='Failed to fetch'||m=='Load failed')m='连不上接口（请检查地址、https 或跨域设置）';p.gen={s:'f',p:pr,e:m};save();render()}
+ fetch(a.url,{method:'POST',headers:h,body:JSON.stringify(b)}).then(function(x){return x.json()}).then(function(j){var d=j.data&&j.data[0];if(!d)throw new Error((j.error&&(j.error.message||j.error))||'返回格式不对');var src=d.b64_json?'data:image/png;base64,'+d.b64_json:d.url;toData(src,900,function(s){var p=gp_(id);if(!p)return;p.imgs=(p.imgs||[]).concat([s]);p.gen=null;save();render()})}).catch(fail)}
 document.addEventListener('input',function(e){var t=e.target;if(t.dataset&&t.dataset.g){S.api[t.dataset.g]=t.value;save()}else if(t.id=='gp'){S.gprompt=t.value;save()}});
-document.addEventListener('click',function(e){var t=e.target.closest('[data-a]');if(!t)return;var a=t.dataset.a,i=+t.dataset.i,v;
+document.addEventListener('click',function(e){if(e.target.id=='m2'){$('#m2').classList.remove('on');return}var t=e.target.closest('[data-a]');if(!t)return;var a=t.dataset.a,i=+t.dataset.i,v;
  if(a=='tab'){S.tab=t.dataset.t;save();render()}
- else if(a=='roll'){RN=Math.floor(Math.random()*1e6);render()}
+ else if(a=='roll'){var L=S.notes.length;if(L){var k=Math.floor(Math.random()*L);if(L>1)while(k==ND)k=Math.floor(Math.random()*L);ND=k}render()}
+ else if(a=='thide'){S.hide=!S.hide;save();render()}
  else if(a=='addn'){v=$('#ni').value.trim();if(v){S.notes.push({who:S.cur,text:v});save();render()}}
- else if(a=='deln'){S.notes.splice(i,1);save();render()}
+ else if(a=='deln'){if(confirm('撕掉这张纸条吗？')){S.notes.splice(i,1);ND=-1;save();render()}}
  else if(a=='addw'){v=$('#wi').value.trim();if(v){S.wishes.push({who:S.cur,text:v,done:false});save();render()}}
  else if(a=='tw'){S.wishes[i].done=!S.wishes[i].done;save();render()}
  else if(a=='delw'){S.wishes.splice(i,1);save();render()}
- else if(a=='addd'){v=$('#dn').value.trim();var d=$('#dv').value;if(v&&d){S.days.push({name:v,date:d});save();render()}else toast('名字和日期都要填')}
+ else if(a=='addd'){v=$('#dn').value.trim();var d=$('#dv').value;if(v&&d){S.days.push({name:v,date:d,yr:$('#dy').checked});save();render()}else toast('名字和日期都要填')}
  else if(a=='deld'){S.days.splice(i,1);save();render()}
- else if(a=='gq'){var p=$('#gp');p.value+=(p.value?'，':'')+t.dataset.q;S.gprompt=p.value;save()}
- else if(a=='go')gen();
- else if(a=='gpost')toData(G.img,900,function(s){composer();pend.imgs=[s];pvr()});
- else if(a=='gav')toData(G.img,300,function(s){S.profiles[S.cur].avatar=s;save();render();toast('已设为头像')});
- else if(a=='gcv')toData(G.img,1000,function(s){S.profiles[S.cur].cover=s;save();render();toast('已设为背景')});
+ else if(a=='gq'){var p=$('#gpm');p.value+=(p.value?'，':'')+t.dataset.q}
+ else if(a=='gset')gset();
+ else if(a=='gclose')$('#m2').classList.remove('on');
+ else if(a=='gtog'){pend.gen=!pend.gen;$('#gb').style.display=pend.gen?'block':'none';$('#gt').classList.toggle('on',!!pend.gen)}
+ else if(a=='gretry')runGen(+t.dataset.id);
+ else if(a=='gdrop'){var q=gp_(+t.dataset.id);if(q){q.gen=null;save();render()}}
 });
 render();
 try{if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){})}catch(e){}
