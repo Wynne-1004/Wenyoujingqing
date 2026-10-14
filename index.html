@@ -57,6 +57,7 @@ button{cursor:pointer;border:0;background:none}
 .cin button{color:var(--acc);font-size:13px}
 .empty{text-align:center;color:var(--sub);padding:40px 20px;background:var(--card)}
 .tg{background:var(--soft);color:var(--acc);border-radius:10px;padding:0 8px;margin-right:6px}
+#ub{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));background:var(--acc);color:#fff;border-radius:14px;padding:12px;text-align:center;display:none;z-index:40}
 .gs{background:var(--soft);color:var(--sub);border-radius:8px;padding:6px 10px;font-size:13px;margin-bottom:6px}.gs button{color:var(--acc);margin-left:8px}
 #m2{position:fixed;inset:0;background:rgba(30,20,50,.45);display:none;align-items:flex-end;justify-content:center;z-index:25}
 #m2.on{display:flex}
@@ -100,6 +101,7 @@ button{cursor:pointer;border:0;background:none}
 <div id="m"><div class="sheet" id="sh"></div></div>
 <div id="m2"><div class="sheet" id="sh2"></div></div>
 <div id="t"></div>
+<div id="ub" data-a="reload">✨ 有新版本啦，点这里刷新</div>
 <input type="file" id="fi" accept="image/*" hidden>
 <input type="file" id="fj" accept=".json" hidden>
 <script>
@@ -145,7 +147,7 @@ function composer(){
 function pvr(){$('#pv').innerHTML=pend.imgs.map(function(s,i){return '<div class="pv" style="background-image:url(\''+s+'\')" data-a="rmimg" data-i="'+i+'"></div>'}).join('')+(pend.imgs.length<6?'<button class="pv" data-a="addimg">＋</button>':'')}
 function editor(){
  var p=S.profiles[S.cur];D={name:p.name,bio:p.bio,avatar:p.avatar,cover:p.cover,anniv:S.anniv,acc:S.acc};
- open('<h3>装饰「'+esc(p.name)+'」的主页</h3><label>昵称</label><input type="text" id="en" maxlength="16" value="'+esc(p.name)+'"><label>个性签名</label><input type="text" id="eb" maxlength="60" value="'+esc(p.bio)+'"><label>头像</label><div class="row"><div class="pv" id="eav"></div><button class="fl" data-a="pav">上传头像</button><button class="fl" data-a="rav">用表情代替</button></div><label>主页背景</label><div class="row" id="ecv"></div><div class="row" style="margin-top:8px"><button class="fl" data-a="pcv">上传背景图</button></div><label>相遇纪念日</label><input type="date" id="ea" value="'+esc(S.anniv)+'"><label>主题色</label><div class="row">'+ACC.map(function(c){return '<button class="th" style="background:'+c+'" data-a="acc" data-c="'+c+'"></button>'}).join('')+'</div><label>生图设置</label><div class="row"><button class="fl" data-a="gset">打开生图设置</button></div><label>数据备份</label><div class="row"><button class="fl" data-a="exp">导出备份</button><button class="fl" data-a="imp">导入备份</button></div><div class="btns" style="padding:16px 0 0"><button class="btn" data-a="close">取消</button><button class="btn p" data-a="saveP">保存</button></div>');
+ open('<h3>装饰「'+esc(p.name)+'」的主页</h3><label>昵称</label><input type="text" id="en" maxlength="16" value="'+esc(p.name)+'"><label>个性签名</label><input type="text" id="eb" maxlength="60" value="'+esc(p.bio)+'"><label>头像</label><div class="row"><div class="pv" id="eav"></div><button class="fl" data-a="pav">上传头像</button><button class="fl" data-a="rav">用表情代替</button></div><label>主页背景</label><div class="row" id="ecv"></div><div class="row" style="margin-top:8px"><button class="fl" data-a="pcv">上传背景图</button></div><label>相遇纪念日</label><input type="date" id="ea" value="'+esc(S.anniv)+'"><label>主题色</label><div class="row">'+ACC.map(function(c){return '<button class="th" style="background:'+c+'" data-a="acc" data-c="'+c+'"></button>'}).join('')+'</div><label>生图设置</label><div class="row"><button class="fl" data-a="gset">打开生图设置</button></div><label>应用更新</label><div class="row"><button class="fl" data-a="upd">🔄 检查并刷新到最新版</button></div><label>数据备份</label><div class="row"><button class="fl" data-a="exp">导出备份</button><button class="fl" data-a="imp">导入备份</button></div><div class="btns" style="padding:16px 0 0"><button class="btn" data-a="close">取消</button><button class="btn p" data-a="saveP">保存</button></div>');
  evr();
 }
 function evr(){
@@ -217,13 +219,15 @@ document.addEventListener('click',function(e){if(e.target.id=='m2'){$('#m2').cla
  else if(a=='deld'){S.days.splice(i,1);save();render()}
  else if(a=='gq'){var p=$('#gpm');p.value+=(p.value?'，':'')+t.dataset.q}
  else if(a=='gset')gset();
+ else if(a=='reload')location.reload();
+ else if(a=='upd'){toast('正在检查更新…');var P=[];try{if(navigator.serviceWorker)P.push(navigator.serviceWorker.getRegistrations().then(function(r){return Promise.all(r.map(function(x){return x.unregister()}))}));if(window.caches)P.push(caches.keys().then(function(k){return Promise.all(k.map(function(x){return caches.delete(x)}))}))}catch(e){}Promise.all(P).then(function(){location.replace(location.pathname+'?u='+Date.now())},function(){location.reload()})}
  else if(a=='gclose')$('#m2').classList.remove('on');
  else if(a=='gtog'){pend.gen=!pend.gen;$('#gb').style.display=pend.gen?'block':'none';$('#gt').classList.toggle('on',!!pend.gen)}
  else if(a=='gretry')runGen(+t.dataset.id);
  else if(a=='gdrop'){var q=gp_(+t.dataset.id);if(q){q.gen=null;save();render()}}
 });
 render();
-try{if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){})}catch(e){}
+try{if('serviceWorker' in navigator){var hadC=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js').catch(function(){});navigator.serviceWorker.addEventListener('controllerchange',function(){if(hadC)$('#ub').style.display='block'})}}catch(e){}
 </script>
 </body>
 </html>
